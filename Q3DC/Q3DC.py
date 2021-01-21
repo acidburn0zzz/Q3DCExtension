@@ -1,4 +1,5 @@
 import csv
+import sys
 from collections import defaultdict
 import json
 import logging
@@ -24,6 +25,15 @@ except ModuleNotFoundError as e:
     slicer.util.pip_install('networkx')
     import networkx as nx
 
+def trace(frame, event, arg):
+    filename = frame.f_code.co_filename
+    if filename == __file__:
+        if event in ('call', 'return'):
+            name = frame.f_code.co_name
+            line = frame.f_lineno
+            logging.debug('[TRACE] %s %s (%s:%s)', event, name, filename, line)
+
+    return trace
 
 #
 # CalculateDisplacement
@@ -56,6 +66,8 @@ class Q3DC(ScriptedLoadableModule):
 class Q3DCWidget(ScriptedLoadableModuleWidget):
 
     def setup(self):
+        sys.settrace(trace)
+
         logging.debug("Q3DC Widget Setup")
         ScriptedLoadableModuleWidget.setup(self)
         # GLOBALS:
@@ -667,6 +679,8 @@ class Q3DCWidget(ScriptedLoadableModuleWidget):
 
 class Q3DCLogic(ScriptedLoadableModuleLogic):
     def __init__(self, interface):
+        sys.settrace(trace)
+
         self.interface = interface
         self.selectedModel = None
         self.selectedFidList = None
